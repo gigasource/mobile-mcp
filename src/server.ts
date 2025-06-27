@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types";
 import { z, ZodRawShape, ZodTypeAny } from "zod";
-import fs from "node:fs";
-import os from "node:os";
-import crypto from "node:crypto";
+import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { tmpdir } from "node:os";
 
 import { error, trace } from "./logger";
 import { AndroidRobot, AndroidDeviceManager } from "./android";
@@ -462,7 +462,7 @@ export const createMcpServer = (): McpServer => {
 					trace("ImageMagick is installed, resizing screenshot");
 					const image = Image.fromBuffer(screenshot);
 					const beforeSize = screenshot.length;
-					screenshot = image.resize(Math.floor(pngSize.width / screenSize.scale))
+					screenshot = image.resize(Math.floor(pngSize.width / 4))
 						.jpeg({ quality: 75 })
 						.toBuffer();
 
@@ -471,12 +471,15 @@ export const createMcpServer = (): McpServer => {
 
 					mimeType = "image/jpeg";
 				}
+				const screenshotFile = resolve(tmpdir(), `screenshot-${Date.now()}.jpg`);
+				await writeFile(screenshotFile, screenshot);
+				trace(`Screenshot saved to ${screenshotFile}`);
 
-				const screenshot64 = screenshot.toString("base64");
-				trace(`Screenshot taken: ${screenshot.length} bytes`);
-
-				return {
-					content: [{ type: "image", data: screenshot64, mimeType }]
+				return <CallToolResult>{
+					content: [
+						{ type: "resource", resource: { uri: `file://${screenshotFile}`, mimeType } },
+						{ type: "text", text: `Screenshot taken and saved to \`${screenshotFile}` },
+					]
 				};
 			} catch (err: any) {
 				error(`Error taking screenshot: ${err.message} ${err.stack}`);
