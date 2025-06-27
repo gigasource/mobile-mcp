@@ -1,5 +1,7 @@
 import path from "path";
 import { execFileSync } from "child_process";
+import { tmpdir } from "node:os";
+import { writeFile } from "node:fs/promises";
 
 import * as xml from "fast-xml-parser";
 
@@ -105,13 +107,20 @@ export class AndroidRobot implements Robot {
 			}));
 	}
 
-	private async listPackages(): Promise<string[]> {
-		return this.adb("shell", "pm", "list", "packages")
-			.toString()
-			.split("\n")
-			.map(line => line.trim())
-			.filter(line => line.startsWith("package:"))
-			.map(line => line.substring("package:".length));
+	public async installApp(packageUri: string): Promise<void> {
+		let packageFile = packageUri;
+		// Check if packageUri is a web URL or a local file path
+		if (packageUri.startsWith("http://") || packageUri.startsWith("https://")) {
+			// Create a temporary file
+			packageFile = path.join(tmpdir(), `android-app-${Date.now()}.apk`);
+
+			// Download the file
+			const res = await fetch(packageUri);
+			if (!res.ok || !res.body) {throw new Error(`Failed to download app: ${res.statusText}`);}
+			await writeFile(packageFile, res.body);
+		}
+		// If it's a local file path, proceed with installation
+		this.adb("install", "-r", packageFile);
 	}
 
 	public async launchApp(packageName: string): Promise<void> {

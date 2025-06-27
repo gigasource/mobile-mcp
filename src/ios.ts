@@ -1,3 +1,8 @@
+import path from "path";
+import { tmpdir } from "os";
+import { randomBytes } from "crypto";
+import { readFileSync, unlinkSync } from "fs";
+import { writeFile } from "fs/promises";
 import { execFileSync } from "child_process";
 import { Socket } from "net";
 
@@ -135,6 +140,25 @@ export class IosRobot implements Robot {
 					appName,
 				};
 			});
+	}
+
+	public async installApp(packageUri: string): Promise<void> {
+		await this.assertTunnelRunning();
+
+		let packageFile = packageUri;
+		// Check if packageUri is a web URL or a local file path
+		if (packageUri.startsWith("http://") || packageUri.startsWith("https://")) {
+			// Create a temporary file
+			packageFile = path.join(tmpdir(), `ios-app-${Date.now()}.ipa`);
+
+			// Download the file
+			const res = await fetch(packageUri);
+			if (!res.ok || !res.body) {throw new Error(`Failed to download app: ${res.statusText}`);}
+			await writeFile(packageFile, res.body);
+		}
+
+		// TODO: Check if the file is a valid IPA file
+		await this.ios("install", packageFile);
 	}
 
 	public async launchApp(packageName: string): Promise<void> {

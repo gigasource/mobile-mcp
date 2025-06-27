@@ -1,4 +1,7 @@
 import { execFileSync } from "child_process";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
+import { tmpdir } from "node:os";
 
 import { WebDriverAgent } from "./webdriver-agent";
 import { ActionableError, Button, InstalledApp, Robot, ScreenElement, ScreenSize, SwipeDirection, Orientation } from "./robot";
@@ -67,6 +70,22 @@ export class Simctl implements Robot {
 		const wda = await this.wda();
 		await wda.openUrl(url);
 		// alternative: this.simctl("openurl", this.simulatorUuid, url);
+	}
+
+	public async installApp(packageUri: string) {
+		let packageFile = packageUri;
+		// Check if packageUri is a web URL or a local file path
+		if (packageUri.startsWith("http://") || packageUri.startsWith("https://")) {
+			// Create a temporary file
+			packageFile = path.join(tmpdir(), `ios-app-${Date.now()}.ipa`);
+
+			// Download the file
+			const res = await fetch(packageUri);
+			if (!res.ok || !res.body) {throw new Error(`Failed to download app: ${res.statusText}`);}
+			await writeFile(packageFile, res.body);
+		}
+
+		this.simctl("install", this.simulatorUuid, packageFile);
 	}
 
 	public async launchApp(packageName: string) {

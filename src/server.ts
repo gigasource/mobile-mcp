@@ -236,6 +236,19 @@ export const createMcpServer = (): McpServer => {
 	);
 
 	tool(
+		"mobile_install_app",
+		"Install an app on the device. This can be a simulator or an Android device. Use the list_available_devices tool to get a list of available devices.",
+		{
+			packageUri: z.string().describe("The path to the APK/iPA file to install, or the URL to download the APK/iPA from"),
+		},
+		async ({ packageUri }) => {
+			requireRobot();
+			await robot!.installApp(packageUri);
+			return `Installed app from ${packageUri}`;
+		}
+	);
+
+	tool(
 		"mobile_launch_app",
 		"Launch an app on mobile device. Use this to open a specific app. You can find the package name of the app by calling list_apps_on_device.",
 		{
