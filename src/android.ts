@@ -123,6 +123,10 @@ export class AndroidRobot implements Robot {
 		this.adb("install", "-r", packageFile);
 	}
 
+	public async uninstallApp(packageName: string): Promise<void> {
+		this.adb("uninstall", packageName);
+	}
+
 	public async launchApp(packageName: string): Promise<void> {
 		this.adb("shell", "monkey", "-p", packageName, "-c", "android.intent.category.LAUNCHER", "1");
 	}

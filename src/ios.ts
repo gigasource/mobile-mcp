@@ -161,6 +161,11 @@ export class IosRobot implements Robot {
 		await this.ios("install", packageFile);
 	}
 
+	public async uninstallApp(packageName: string): Promise<void> {
+		await this.assertTunnelRunning();
+		await this.ios("uninstall", packageName);
+	}
+
 	public async launchApp(packageName: string): Promise<void> {
 		await this.assertTunnelRunning();
 		await this.ios("launch", packageName);

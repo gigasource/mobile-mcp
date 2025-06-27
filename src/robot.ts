@@ -45,6 +45,7 @@ export class ActionableError extends Error {
 export type Orientation = "portrait" | "landscape";
 
 export interface Robot {
+	uninstallApp(packageName: string): Promise<void>
 	installApp(packageUri: string): Promise<void>
 	/**
 	 * Get the screen size of the device in pixels.

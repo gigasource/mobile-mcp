@@ -249,6 +249,19 @@ export const createMcpServer = (): McpServer => {
 	);
 
 	tool(
+		"mobile_uninstall_app",
+		"Uninstall an app from the device",
+		{
+			packageName: z.string().describe("The package name or ID of the app to uninstall"),
+		},
+		async ({ packageName }) => {
+			requireRobot();
+			await robot!.uninstallApp(packageName);
+			return `Uninstalled app ${packageName}`;
+		}
+	);
+
+	tool(
 		"mobile_launch_app",
 		"Launch an app on mobile device. Use this to open a specific app. You can find the package name of the app by calling list_apps_on_device.",
 		{

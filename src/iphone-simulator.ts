@@ -88,6 +88,10 @@ export class Simctl implements Robot {
 		this.simctl("install", this.simulatorUuid, packageFile);
 	}
 
+	async uninstallApp(packageName: string): Promise<void> {
+		this.simctl("uninstall", this.simulatorUuid, packageName);
+	}
+
 	public async launchApp(packageName: string) {
 		this.simctl("launch", this.simulatorUuid, packageName);
 	}
